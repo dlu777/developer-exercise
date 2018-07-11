@@ -1,5 +1,32 @@
 require 'minitest/autorun'
 
+class Array
+  def where(hash)
+    results = []
+    each do |element|
+      isValid = true
+      hash.each do |key, value|
+        if value.class == Regexp
+          if element[key] !~ value
+            isValid = false
+          end
+        else
+          if element[key] != value
+            isValid = false
+          end
+        end
+        if !isValid
+          break
+        end
+      end
+      if isValid
+        results.push(element)
+      end
+    end
+    results
+  end
+end
+
 class WhereTest < Minitest::Test
   def setup
     @boris   = {:name => 'Boris The Blade', :quote => "Heavy is good. Heavy is reliable. If it doesn't work you can always hit them.", :title => 'Snatch', :rank => 4}
@@ -11,7 +38,7 @@ class WhereTest < Minitest::Test
   end
 
   def test_where_with_exact_match
-    assert_equal [@wolf], @fixtures.where(:name => 'The Wolf'),
+    assert_equal [@wolf], @fixtures.where(:name => 'The Wolf')
   end
 
   def test_where_with_partial_match
@@ -29,5 +56,8 @@ class WhereTest < Minitest::Test
   def test_with_chain_calls
     assert_equal [@charles], @fixtures.where(:quote => /if/i).where(:rank => 3)
   end
-end
 
+  def test_with_big_calls
+    assert_equal [@wolf], @fixtures.where(:rank => 4, :quote => /get/, :name => "The Wolf")
+  end
+end
