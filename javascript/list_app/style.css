@@ -1,0 +1,14 @@
+th, td {
+  text-align: left;
+  padding: 15px;
+}
+
+th {
+  font-size: 20px;
+}
+
+#searchbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+}

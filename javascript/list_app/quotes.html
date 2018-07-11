@@ -8,16 +8,155 @@
   <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  <link rel="stylesheet" href="/Users/davidlu/Desktop/challenges/benchprep/developer-exercise/javascript/list_app/style.css" />
 </head>
 <body>
   <div id="quotes"></div>
+
+  <script type="text/babel">
+    class Quotes extends React.Component {
+      constructor(){
+        super();
+        this.state = {
+          displayedQuotes: [],
+          currentPageIndex: 0,
+        }
+        this.allQuotes = [];
+        this.pages = [];
+      }
+
+      componentDidMount = () => {
+        fetch('https://gist.githubusercontent.com/benchprep/dffc3bffa9704626aa8832a3b4de5b27/raw/b191cf3b6ea9cdcca8b363516ff969261398061f/quotes.json')
+          .then(res => res.json())
+          .then(result => {
+            this.allQuotes = result;
+            this.createPages();
+            this.setState({displayedQuotes: this.pages[0]});
+          })
+      }
+
+      createPages = () => {
+        let firstIndex = 0;
+        let currentPage = [];
+        while(firstIndex < this.allQuotes.length){
+          currentPage = this.allQuotes.slice(firstIndex, firstIndex + 15);
+          this.pages.push(currentPage);
+          firstIndex += 15;
+        }
+        console.log('pages', this.pages)
+      }
+
+      changePage = pageIndex => {
+        this.setState({
+          currentPageIndex: pageIndex,
+          displayedQuotes: this.pages[pageIndex]
+        })
+      }
+
+      searchQuotes = event => {
+        event.preventDefault();
+        let query = event.target.query.value.toLowerCase();
+        let matchingQuotes = [];
+        for(let i=0; i<this.allQuotes.length; i++){
+          if(this.allQuotes[i].quote.toLowerCase().indexOf(query) > -1){
+            matchingQuotes.push(this.allQuotes[i])
+          }
+        }
+        this.setState({
+          displayedQuotes: matchingQuotes,
+          currentPageIndex: -1,
+        })
+        event.target.reset();
+      }
+
+      handleChange = event => {
+        let query = event.target.value;
+        let matchingQuotes = [];
+        for(let i=0; i<this.allQuotes.length; i++){
+          if(this.allQuotes[i].quote.toLowerCase().indexOf(query) > -1){
+            matchingQuotes.push(this.allQuotes[i])
+          }
+        }
+        this.setState({
+          displayedQuotes: matchingQuotes,
+          currentPageIndex: -1,
+        })
+      }
+
+      toggleTheme = theme => {
+        let themeQuotes = this.allQuotes.filter(quote => quote.theme === theme);
+        this.setState({
+          displayedQuotes: themeQuotes,
+          currentPageIndex: -1,
+        })
+      }
+
+      render () {
+        console.log('quotes',this.allQuotes)
+        let {currentPageIndex, displayedQuotes} = this.state;
+        return (
+          <div>
+            <div id='searchbar'>
+              <form onSubmit={this.searchQuotes}>
+                <input onChange={this.handleChange} type='text' placeholder='Search for quote' name='query'></input>
+                <button type='submit'>Search</button>
+              </form>
+              <div>
+                <span>Sort by Theme:</span>
+                <button onClick={() => this.toggleTheme('movies')}>Movies</button>
+                <button onClick={() => this.toggleTheme('games')}>Games</button>
+              </div>
+            </div>
+            <div>
+              {currentPageIndex > 0 &&
+                <button onClick={() => this.changePage(currentPageIndex - 1)}>Previous</button>
+              }
+              {currentPageIndex > -1 && currentPageIndex < this.pages.length - 1 &&
+                <button onClick={() => this.changePage(currentPageIndex + 1)}>Next</button>
+              }
+              {currentPageIndex === -1 &&
+                <button onClick={() => this.changePage(0)}>See All Quotes</button>
+              }
+            </div>
+            <table id='table'>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Context</th>
+                  <th>Source</th>
+                  <th>Theme</th>
+                  <th>Quote</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedQuotes.map((quote, idx) => {
+                  return (
+                    <tr key={idx}>
+                      <td>{currentPageIndex === -1 ? idx+1 : currentPageIndex*15+idx+1}</td>
+                      <td>{quote.context}</td>
+                      <td>{quote.source}</td>
+                      <td>{quote.theme}</td>
+                      <td>{quote.quote}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    }
+  </script>
+
   <script type="text/babel">
     ReactDOM.render(
       <div>
         <h1>Quotes</h1>
+        <Quotes/>
       </div>,
       document.getElementById('quotes')
     );
   </script>
 </body>
 </html>
+
