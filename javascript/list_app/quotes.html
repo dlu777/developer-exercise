@@ -1,6 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+
 <head>
   <title>List App</title>
   <script src="http://code.jquery.com/jquery-latest.js"></script>
@@ -8,8 +9,10 @@
   <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
-  <link rel="stylesheet" href="/Users/davidlu/Desktop/challenges/benchprep/developer-exercise/javascript/list_app/style.css" />
+  <link rel="stylesheet" href="/Users/davidlu/Desktop/challenges/benchprep/developer-exercise/javascript/list_app/style.css"
+  />
 </head>
+
 <body>
   <div id="quotes"></div>
 
@@ -22,6 +25,7 @@
           currentPageIndex: 0,
         }
         this.allQuotes = [];
+        this.selectedQuotes = [];
         this.pages = [];
       }
 
@@ -30,16 +34,18 @@
           .then(res => res.json())
           .then(result => {
             this.allQuotes = result;
-            this.createPages();
+            this.selectedQuotes = result;
+            this.createPages(this.allQuotes);
             this.setState({displayedQuotes: this.pages[0]});
           })
       }
 
-      createPages = () => {
+      createPages = quotes => {
         let firstIndex = 0;
+        this.pages = [];
         let currentPage = [];
-        while(firstIndex < this.allQuotes.length){
-          currentPage = this.allQuotes.slice(firstIndex, firstIndex + 15);
+        while(firstIndex < quotes.length){
+          currentPage = quotes.slice(firstIndex, firstIndex + 15);
           this.pages.push(currentPage);
           firstIndex += 15;
         }
@@ -57,14 +63,15 @@
         event.preventDefault();
         let query = event.target.query.value.toLowerCase();
         let matchingQuotes = [];
-        for(let i=0; i<this.allQuotes.length; i++){
-          if(this.allQuotes[i].quote.toLowerCase().indexOf(query) > -1){
-            matchingQuotes.push(this.allQuotes[i])
+        for(let i=0; i<this.selectedQuotes.length; i++){
+          if(this.selectedQuotes[i].quote.toLowerCase().indexOf(query) > -1){
+            matchingQuotes.push(this.selectedQuotes[i])
           }
         }
+        this.createPages(matchingQuotes);
         this.setState({
-          displayedQuotes: matchingQuotes,
-          currentPageIndex: -1,
+          displayedQuotes: this.pages[0],
+          currentPageIndex: 0,
         })
         event.target.reset();
       }
@@ -72,27 +79,31 @@
       handleChange = event => {
         let query = event.target.value;
         let matchingQuotes = [];
-        for(let i=0; i<this.allQuotes.length; i++){
-          if(this.allQuotes[i].quote.toLowerCase().indexOf(query) > -1){
-            matchingQuotes.push(this.allQuotes[i])
+        for(let i=0; i<this.selectedQuotes.length; i++){
+          if(this.selectedQuotes[i].quote.toLowerCase().indexOf(query) > -1){
+            matchingQuotes.push(this.selectedQuotes[i])
           }
         }
+        this.createPages(matchingQuotes);
         this.setState({
-          displayedQuotes: matchingQuotes,
-          currentPageIndex: -1,
+          displayedQuotes: this.pages[0],
+          currentPageIndex: 0,
         })
       }
 
       toggleTheme = theme => {
         let themeQuotes = this.allQuotes.filter(quote => quote.theme === theme);
+        this.selectedQuotes = themeQuotes;
+        this.createPages(themeQuotes);
+        console.log('pages', this.pages)
         this.setState({
-          displayedQuotes: themeQuotes,
-          currentPageIndex: -1,
+          displayedQuotes: this.pages[0],
+          currentPageIndex: 0,
         })
       }
 
       render () {
-        console.log('quotes',this.allQuotes)
+
         let {currentPageIndex, displayedQuotes} = this.state;
         return (
           <div>
@@ -114,9 +125,10 @@
               {currentPageIndex > -1 && currentPageIndex < this.pages.length - 1 &&
                 <button onClick={() => this.changePage(currentPageIndex + 1)}>Next</button>
               }
-              {currentPageIndex === -1 &&
-                <button onClick={() => this.changePage(0)}>See All Quotes</button>
-              }
+
+                <button onClick={() => {
+                  this.createPages(this.allQuotes);
+                  this.changePage(0)}}>See All Quotes</button>
             </div>
             <table id='table'>
               <thead>
@@ -158,5 +170,5 @@
     );
   </script>
 </body>
-</html>
 
+</html>
